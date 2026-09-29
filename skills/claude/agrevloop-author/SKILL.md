@@ -18,6 +18,14 @@ approves at the gates and commits at the end.
 
 `<change-id or description> [gates=p1|all|none]`, or `review [<name>]`
 
+- No arguments: run `openspec list` and `git status --porcelain`, then
+  - exactly one active change: continue it, and say which one;
+  - several active changes: list them and ask which one;
+  - no active change but uncommitted changes: show `git status --short` and ask whether to run
+    review mode on them;
+  - neither: ask what to build.
+
+  Never pick for the human when the answer is not unique.
 - `review` skips the phases: see Review mode below.
 - An existing `openspec/changes/<id>/` is continued from the phase its files show. Otherwise pick a
   kebab-case id from the description and create the change.
