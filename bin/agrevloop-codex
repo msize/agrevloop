@@ -2,6 +2,8 @@
 # Start Codex as the agrevloop reviewer in this pane: workspace-write sandbox rooted at the
 # checkout, no network, no approval prompts, and the mailbox copied into its tool environment
 # (Codex strips the environment from tool subprocesses). Extra arguments go to codex unchanged.
+# The configurable status line is turned off: it draws a second footer row under the composer,
+# and peer-chat, which strips exactly one, then refuses every nudge as "no Codex composer visible".
 set -euo pipefail
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -19,8 +21,9 @@ exec codex \
   --sandbox workspace-write \
   --ask-for-approval never \
   -c sandbox_workspace_write.network_access=false \
+  -c 'tui.status_line=[]' \
   -c "shell_environment_policy.set.AI_HUB='$(win "$hub")'" \
   -c "shell_environment_policy.set.AI_BOX='codex'" \
   -c "shell_environment_policy.set.AGWORKBENCH='$(win "$workbench")'" \
   "$@" \
-  'You are the agrevloop REVIEWER. Load the agrevloop-reviewer skill, then wait for mail from Claude.'
+  'You are the agrevloop REVIEWER. Load the agrevloop-reviewer skill, handle any unread mail from Claude, then wait for more.'
