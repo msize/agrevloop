@@ -33,7 +33,8 @@ python @AGR@ --as codex send --to claude --kind review --subject "<subject>" --b
 ## What you receive
 
 Subjects: `<id> P1 r<k>` (proposal and spec deltas), `<id> P2 r<k>` (tasks), `<id> P3 <task> r<k>`
-(one implemented task), `<id> DONE` (the loop is over: do not reply).
+(one implemented task), `<id> P3 wip r<k>` (existing uncommitted changes), `<id> DONE` (the loop
+is over: do not reply).
 
 ## How to review
 
@@ -51,6 +52,9 @@ message alone. Add `incremental` from round 2 on.
 - In P3, tell the review skill that the change under review is exactly `git diff` (unstaged changes =
   this task, since the staged checkpoint), and that its intent lives in `openspec/changes/<id>/`
   and in the task text.
+- `<id> P3 wip r<k>` is review mode: changes made before the loop, with no task in tasks.md and
+  often no change folder. The intent is what the request body states: pass it to the review skill as the
+  context. A folder the body names is read as usual.
 - The review skill reviews each pass fresh. The round bookkeeping is yours: from round 2, check every
   previous finding first. Claude answers each one with fixed, disputed or deferred. Accept a
   dispute when the evidence holds, and say so.

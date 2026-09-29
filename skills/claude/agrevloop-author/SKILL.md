@@ -16,8 +16,9 @@ approves at the gates and commits at the end.
 
 ## Arguments
 
-`<change-id or description> [gates=p1|all|none]`
+`<change-id or description> [gates=p1|all|none]`, or `review [<name>]`
 
+- `review` skips the phases: see Review mode below.
 - An existing `openspec/changes/<id>/` is continued from the phase its files show. Otherwise pick a
   kebab-case id from the description and create the change.
 - `gates` says where you stop for the human. `p1` (default): after phase 1 and at the end. `all`:
@@ -119,6 +120,18 @@ order (a group of trivial tasks may go together, say so in the subject):
 4. On `APPROVED`: tick the task in tasks.md, `git add -A` as the checkpoint, next task.
 
 Never commit, push or amend. The staged index is the checkpoint; the human commits.
+
+## Review mode - changes that already exist
+
+For work done before the loop started: the uncommitted changes in the working tree are one step.
+
+1. Phase 0 as usual. `<id>` is `<name>`, or the current branch name when no name is given.
+2. `git add -N .` so new files show up in `git diff`. Codex reviews exactly `git diff`, so anything
+   already staged is outside the review: say so in the request when the index is not empty.
+3. Request review with subject `<id> P3 wip r<k>`. The body states the intent of the change (the
+   task or issue it serves, and any OpenSpec change folder it belongs to), the files touched, and
+   the commands you ran with their results.
+4. Rounds as usual. On `APPROVED`: `git add -A`, then the end below. There are no gates.
 
 ## Gates and the end
 
