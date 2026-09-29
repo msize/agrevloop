@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Start Codex as the agrevloop reviewer in this pane: workspace-write sandbox rooted at the
+# checkout, no network, no approval prompts, and the mailbox copied into its tool environment
+# (Codex strips the environment from tool subprocesses). Extra arguments go to codex unchanged.
+set -euo pipefail
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(git rev-parse --show-toplevel)"
+workbench="${AGWORKBENCH:-$(cd "$here/../.." && pwd)/agworkbench}"
+hub="$root/.agrevloop"
+
+[ -f "$workbench/lib/agmsg.py" ] || { echo "agrevloop-codex: agworkbench not found at $workbench" >&2; exit 2; }
+mkdir -p "$hub/reviews"
+
+win() { cygpath -m "$1"; }
+
+cd "$root"
+exec codex \
+  --sandbox workspace-write \
+  --ask-for-approval never \
+  -c sandbox_workspace_write.network_access=false \
+  -c "shell_environment_policy.set.AI_HUB='$(win "$hub")'" \
+  -c "shell_environment_policy.set.AI_BOX='codex'" \
+  -c "shell_environment_policy.set.AGWORKBENCH='$(win "$workbench")'" \
+  "$@" \
+  'You are the agrevloop REVIEWER. Load the agrevloop-reviewer skill, then wait for mail from Claude.'
