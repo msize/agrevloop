@@ -18,7 +18,7 @@ provably empty composer) and `wb.py wait-mail` (Claude's background waiter).
 
 ## Requirements
 
-- agwinterm with `agwintermctl` on PATH, Git Bash, Python 3.10+
+- [yeroo/agwinterm](https://github.com/yeroo/agwinterm) with `agwintermctl` on PATH, Git Bash, Python 3.10+
 - [yeroo/agworkbench](https://github.com/yeroo/agworkbench) cloned next to this repo, or `AGWORKBENCH` set
 - Claude Code, Codex CLI, OpenSpec CLI, and a Codex review skill (see How to review in the reviewer skill)
 
