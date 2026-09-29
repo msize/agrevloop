@@ -98,6 +98,9 @@ $AGR status active
 openspec status --change <id>      # when the change exists
 ```
 
+`init` ignores `.agrevloop/` and `review-runs/` through `.git/info/exclude`, the checkout's local
+ignore file. Never add them to the project's `.gitignore`, and never stage or commit them.
+
 `init` fails without a split: say so and stop. You never start Codex and never open a pane. Tell the
 human to start it with `agrevloop-codex` in the other pane if `doctor` shows no reviewer.
 

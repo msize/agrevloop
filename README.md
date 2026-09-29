@@ -40,6 +40,10 @@ Claude runs `agr.py --as claude init`, which creates `.agrevloop/`, adds it and 
 `.git/info/exclude`, and registers both panes. From there each request reaches Codex as a
 `Chat from Claude:` pointer and each review wakes Claude through its background waiter.
 
+`.git/info/exclude` is the checkout's own ignore file: it works like `.gitignore` but is never
+committed, so the project's `.gitignore` stays untouched and nobody else sees the entries.
+`git check-ignore -v .agrevloop/` shows the rule.
+
 ## How it is bounded
 
 - Codex runs `--sandbox workspace-write --ask-for-approval never` without network. It cannot reach
