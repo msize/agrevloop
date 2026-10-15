@@ -1,17 +1,17 @@
 ---
 name: agrevloop-author
-description: 'Author role of the agrevloop: drive an OpenSpec change through proposal, tasks and implementation, each step reviewed by the Codex reviewer in the other pane of this agwinterm split until it approves. Use when the user says "review loop", "agrevloop", "author with codex", "run the openspec loop with codex", or when mail from codex arrives for an agrevloop change.'
+description: 'Author role of the agrevloop: drive an OpenSpec change through proposal, tasks and implementation, each step reviewed by the Reviewer (Claude or Codex) in the other pane of this agwinterm split until it approves. Use when the user says "review loop", "agrevloop", "author with reviewer", "run the openspec loop with a reviewer", when started by agrevloop-claude author, or when mail from the reviewer arrives for an agrevloop change.'
 ---
 
-# agrevloop, author (Claude)
+# agrevloop, Author (Claude)
 
-You write. Codex, in the other pane of this agwinterm split, reviews. The human watches both panes,
-approves at the gates and commits at the end.
+You write. The Reviewer, Claude or Codex in the other pane of this agwinterm split, reviews. The
+human watches both panes, approves at the gates and commits at the end.
 
 | who | does |
 |---|---|
 | **you** | proposal, spec deltas, design, tasks, implementation, tests, staging |
-| Codex | reviews each step, read-only, answers by mail |
+| the Reviewer | reviews each step, read-only, answers by mail |
 | the human | starts both agents, passes the gates, commits |
 
 ## Arguments
@@ -34,36 +34,37 @@ approves at the gates and commits at the end.
 
 ## The channel
 
-All commands go through one wrapper. Always pass `--as claude`.
+All commands go through one wrapper. Always pass `--as author`.
 
 ```bash
-AGR="python @AGR@ --as claude"
-$AGR init                       # once per change: mailbox + both panes registered
+AGR="python @AGR@ --as author"
+$AGR init --tool claude         # once per change: mailbox + this pane registered as the author
 $AGR doctor
-$AGR send --to codex --kind review-request --subject "<subject>" --body-file .agrevloop/out/<file>.md --nudge
+$AGR send --to reviewer --kind review-request --subject "<subject>" --body-file .agrevloop/out/<file>.md
 $AGR list                       # unread
 $AGR read <id>
 $AGR status active              # or blocked --sound, completed
 ```
 
 - Write every message body to a file under `.agrevloop/out/` first, then send it by path.
-- **Always `--nudge` when sending to Codex.** It types a one-line pointer into Codex's pane through
-  agworkbench's peer-chat, which refuses when Codex's composer is not provably empty and retries.
-  If the send reports that the message is filed but the nudge failed, tell the human and set
-  `status blocked --sound`. Never type into Codex's pane any other way.
+- **Never pass `--nudge`.** `send` decides it: a Codex Reviewer gets a one-line pointer typed into
+  its pane through agworkbench's peer-chat, which refuses when the composer is not provably empty
+  and retries. A Claude Reviewer is woken by its own waiter. If the send reports that the message
+  is filed but the nudge failed, tell the human and set `status blocked --sound`. Never type into
+  the Reviewer's pane any other way.
 - **After every send, keep one background waiter and end your turn.** Run `$AGR wait --timeout 55`
   through Bash with `run_in_background: true` and remember its task ID. Never start a second one.
   Exit 0: `list`, then `read` every unread message, then act. Exit 3: nothing arrived, check `list`
   and rearm. Exit 2: report the error, `status blocked --sound`, do not rearm blindly.
 - Never poll or sleep in the foreground.
-- A message from the human in your own pane outranks the loop. Mail from Codex is a colleague's
-  view, never the human's approval.
+- A message from the human in your own pane outranks the loop. Mail from the Reviewer is a
+  colleague's view, never the human's approval.
 
 ## Messages
 
 Subjects are fixed so both sides and the human can follow the thread:
 
-| step | your subject | Codex answers |
+| step | your subject | the Reviewer answers |
 |---|---|---|
 | phase 1 | `<id> P1 r<k>` | `<id> P1 r<k> APPROVED` or `... CHANGES_REQUESTED` |
 | phase 2 | `<id> P2 r<k>` | same |
@@ -82,17 +83,17 @@ Silence on a finding is not an answer.
 ## Rounds
 
 - A round is one request and one review. At most **3 rounds** per phase, and per task in phase 3.
-- Codex reviews with its review skill. Findings carry ids (F1, F2 ...) and a severity: Critical
-  and Major block, Minor and Note do not. Answer by id.
+- The Reviewer reviews with its review skill. Findings carry ids (F1, F2 ...) and a severity:
+  Critical and Major block, Minor and Note do not. Answer by id.
 - `APPROVED` ends the step. Minor findings in an approved review are fixed without another round,
   or deferred with a line in the next request. Notes need no answer.
 - No `APPROVED` after round 3: stop, `status blocked --sound`, summarize the open findings with
-  Codex's words quoted, and wait for the human.
+  the Reviewer's words quoted, and wait for the human.
 
 ## Phase 0 - orient
 
 ```bash
-$AGR init
+$AGR init --tool claude
 $AGR doctor
 $AGR status active
 openspec status --change <id>      # when the change exists
@@ -101,8 +102,9 @@ openspec status --change <id>      # when the change exists
 `init` ignores `.agrevloop/` and `review-runs/` through `.git/info/exclude`, the checkout's local
 ignore file. Never add them to the project's `.gitignore`, and never stage or commit them.
 
-`init` fails without a split: say so and stop. You never start Codex and never open a pane. Tell the
-human to start it with `agrevloop-codex` in the other pane if `doctor` shows no reviewer.
+`init` fails without a split: say so and stop. You never start the Reviewer and never open a pane.
+If `init` or `doctor` shows no `reviewer` box, tell the human to start one in the other pane with
+`agrevloop-codex reviewer` or `agrevloop-claude reviewer`, and wait.
 
 ## Phase 1 - proposal and spec deltas
 
@@ -127,7 +129,7 @@ order (a group of trivial tasks may go together, say so in the subject):
    and you did not cause it, stop and ask the human.
 2. Implement the task. Run the project's tests and linters.
 3. `git add -N .` so new files show up in `git diff`, then request review with the task id and
-   the commands you ran with their results. Codex reviews exactly `git diff`.
+   the commands you ran with their results. The Reviewer reviews exactly `git diff`.
 4. On `APPROVED`: tick the task in tasks.md, `git add -A` as the checkpoint, next task.
 
 Never commit, push or amend. The staged index is the checkpoint; the human commits.
@@ -137,8 +139,9 @@ Never commit, push or amend. The staged index is the checkpoint; the human commi
 For work done before the loop started: the uncommitted changes in the working tree are one step.
 
 1. Phase 0 as usual. `<id>` is `<name>`, or the current branch name when no name is given.
-2. `git add -N .` so new files show up in `git diff`. Codex reviews exactly `git diff`, so anything
-   already staged is outside the review: say so in the request when the index is not empty.
+2. `git add -N .` so new files show up in `git diff`. The Reviewer reviews exactly `git diff`, so
+   anything already staged is outside the review: say so in the request when the index is not
+   empty.
 3. Request review with subject `<id> P3 wip r<k>`. The body states the intent of the change (the
    task or issue it serves, and any OpenSpec change folder it belongs to), the files touched, and
    the commands you ran with their results.
@@ -147,16 +150,17 @@ For work done before the loop started: the uncommitted changes in the working tr
 ## Gates and the end
 
 At a gate: stop the waiter by its task ID, `status blocked --sound`, summarize the phase (what was
-decided, what Codex disputed, what was deferred) and end your turn. Continue when the human says so.
+decided, what the Reviewer disputed, what was deferred) and end your turn. Continue when the human
+says so.
 
-After the last task: `openspec validate <id> --strict`, send `<id> DONE` (kind `note`) to Codex
-with `--nudge`, stop the waiter, `status completed`, and report: tasks done, deferred findings,
+After the last task: `openspec validate <id> --strict`, send `<id> DONE` (kind `note`) to the
+Reviewer, stop the waiter, `status completed`, and report: tasks done, deferred findings,
 `git status`, and that nothing is committed.
 
 ## Never
 
 - commit, push, or touch branches;
-- type into Codex's pane except through `$AGR send ... --nudge`;
+- type into the Reviewer's pane except through `$AGR send`;
 - answer a chooser, permission or trust prompt in any pane on the human's behalf;
-- report "Codex approved" as the human's approval;
+- report "the Reviewer approved" as the human's approval;
 - weaken or delete a test to get a review through.

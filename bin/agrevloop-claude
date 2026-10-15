@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Start Claude Code in this pane as the agrevloop author or reviewer:
+#
+#   agrevloop-claude author [<change-id or description> [gates=...] | review [<name>]] [-- claude args]
+#   agrevloop-claude reviewer [-- claude args]
+#
+# Registers this pane in the mailbox, then starts claude with the role's skill as its first
+# prompt. Arguments after `--` go to claude unchanged (a permission mode, a model ...).
+set -euo pipefail
+
+usage() { echo "usage: agrevloop-claude author|reviewer [skill args] [-- claude args]" >&2; exit 2; }
+
+role="${1:-}"
+case "$role" in author|reviewer) shift ;; *) usage ;; esac
+skill_args=()
+while [ $# -gt 0 ] && [ "$1" != "--" ]; do skill_args+=("$1"); shift; done
+[ $# -gt 0 ] && shift
+[ "$role" = reviewer ] && [ ${#skill_args[@]} -gt 0 ] && usage
+
+here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+root="$(git rev-parse --show-toplevel)"
+
+cd "$root"
+python "$here/agr.py" --as "$role" init --tool claude
+
+exec claude "$@" "/agrevloop-$role${skill_args[*]:+ ${skill_args[*]}}"
