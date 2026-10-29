@@ -7,6 +7,7 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workbench="${AGWORKBENCH:-$(cd "$here/.." && pwd)/agworkbench}"
 agr="$(cygpath -m "$here/bin/agr.py")"
+bin="$here/bin"   # Git Bash form: the skills show it as the launchers to run
 codex_review="${CODEX_REVIEW_SKILL:?set CODEX_REVIEW_SKILL to how Codex invokes its review skill, e.g. \$plugin:review}"
 claude_review="${CLAUDE_REVIEW_SKILL:?set CLAUDE_REVIEW_SKILL to how Claude Code invokes its review skill, e.g. /plugin:review}"
 
@@ -18,7 +19,7 @@ claude_review="${CLAUDE_REVIEW_SKILL:?set CLAUDE_REVIEW_SKILL to how Claude Code
 install_skill() {
   local src="$1" dst="$2" review="$3"
   mkdir -p "$dst"
-  sed -e "s|@AGR@|$agr|g" -e "s|@REVIEW_SKILL@|$review|g" "$src/SKILL.md" > "$dst/SKILL.md"
+  sed -e "s|@AGR@|$agr|g" -e "s|@BIN@|$bin|g" -e "s|@REVIEW_SKILL@|$review|g" "$src/SKILL.md" > "$dst/SKILL.md"
   echo "installed $dst/SKILL.md"
 }
 

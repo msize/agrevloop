@@ -1,11 +1,13 @@
 #!/usr/bin/env bash
 # Start Claude Code in this pane as the agrevloop author or reviewer:
 #
-#   agrevloop-claude author [<change-id or description> [gates=...] | review [<name>]] [-- claude args]
+#   agrevloop-claude author [<change-id or description> [gates=...] | review [<name>]] [with=codex|claude] [-- claude args]
 #   agrevloop-claude reviewer [-- claude args]
 #
 # Registers this pane in the mailbox, then starts claude with the role's skill as its first
-# prompt. Arguments after `--` go to claude unchanged (a permission mode, a model ...).
+# prompt. The author also gets a left/right split; the reviewer named by with= (default codex)
+# starts in the other pane with the author's first request. Arguments after `--` go to claude
+# unchanged (a permission mode, a model ...).
 set -euo pipefail
 
 usage() { echo "usage: agrevloop-claude author|reviewer [skill args] [-- claude args]" >&2; exit 2; }
@@ -20,7 +22,15 @@ while [ $# -gt 0 ] && [ "$1" != "--" ]; do skill_args+=("$1"); shift; done
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 root="$(git rev-parse --show-toplevel)"
 
+partner=()
+if [ "$role" = author ]; then
+  partner=(--with codex)
+  for arg in "${skill_args[@]}"; do
+    case "$arg" in with=claude|with=codex) partner=(--with "${arg#with=}") ;; with=*) usage ;; esac
+  done
+fi
+
 cd "$root"
-python "$here/agr.py" --as "$role" init --tool claude
+python "$here/agr.py" --as "$role" init --tool claude "${partner[@]}"
 
 exec claude "$@" "/agrevloop-$role${skill_args[*]:+ ${skill_args[*]}}"

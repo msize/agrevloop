@@ -28,9 +28,9 @@ python @AGR@ --as reviewer send --to author --kind review --subject "<subject>" 
   review up.
 - **After you send, end your turn.** Do not poll or wait. The next request arrives as a new prompt.
 - If `send` says the author is not registered, or that both agents are Codex: tell the human that
-  the Author must be Claude, started with `agrevloop-claude author`, and end your turn.
+  the Author must be Claude, started with `@BIN@/agrevloop-claude author`, and end your turn.
 - If a write under `.agrevloop/` fails with a permission error, your sandbox is wrong: say so and
-  ask the human to restart you with `agrevloop-codex reviewer`.
+  ask the human to restart you with `@BIN@/agrevloop-codex reviewer`.
 - A message from the human in your own pane outranks the loop.
 
 ## What you receive

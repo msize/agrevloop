@@ -46,15 +46,22 @@ $AGR init --tool claude
 $AGR doctor
 ```
 
-`init` fails without a split: say so and stop. If `init` or `doctor` shows no `author` box, the
-Author is not started yet: that is fine, its first request will wait in your inbox. Then `list`,
-handle every unread request, `status idle`, arm the waiter and end your turn.
+Usually the Author's `agr.py` started you in the right pane, at the checkout root: a Claude Author
+after filing its first request, so that request is already in your inbox, a Codex Author before
+writing anything. Started by hand, you may come first. Either way: `init` fails without a split,
+say so and stop. If `init` or `doctor` shows no `author` box, the Author is not started yet: that
+is fine, its first request will wait in your inbox. Then `list`, handle every unread request,
+`status idle`, arm the waiter and end your turn.
 
 ## What you receive
 
 Subjects: `<id> P1 r<k>` (proposal and spec deltas), `<id> P2 r<k>` (tasks), `<id> P3 <task> r<k>`
 (one implemented task), `<id> P3 wip r<k>` (existing uncommitted changes), `<id> DONE` (the loop
-is over: do not reply, stop the waiter by its task ID, `status completed`, report and end).
+is over: do not reply, `status completed`, report, rearm the waiter and end your turn).
+
+Keep the waiter after `DONE` too. The Author does not restart a Reviewer that is still running in
+its pane, and it never rings a Claude one: the next change in this split reaches you only through
+the waiter. The human closes you when the work is over.
 
 While you review: `status active`. After you send: `status idle`, rearm, end your turn.
 

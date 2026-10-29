@@ -16,7 +16,7 @@ human watches both panes, approves at the gates and commits at the end.
 
 ## Arguments
 
-`<change-id or description> [gates=p1|all|none]`, or `review [<name>]`
+`<change-id or description> [gates=p1|all|none] [with=codex|claude]`, or `review [<name>] [with=...]`
 
 - No arguments: run `openspec list` and `git status --porcelain`, then
   - exactly one active change: continue it, and say which one;
@@ -31,6 +31,8 @@ human watches both panes, approves at the gates and commits at the end.
   kebab-case id from the description and create the change.
 - `gates` says where you stop for the human. `p1` (default): after phase 1 and at the end. `all`:
   after every phase. `none`: only at the end. A failed phase always stops, whatever the gates.
+- `with` names the Reviewer's tool: `codex` (default) or `claude`. It is not part of the change id
+  or the description.
 
 ## The channel
 
@@ -38,7 +40,7 @@ All commands go through one wrapper. Always pass `--as author`.
 
 ```bash
 AGR="python @AGR@ --as author"
-$AGR init --tool claude         # once per change: mailbox + this pane registered as the author
+$AGR init --tool claude --with <with>   # once per change: mailbox, this pane, the split
 $AGR doctor
 $AGR send --to reviewer --kind review-request --subject "<subject>" --body-file .agrevloop/out/<file>.md
 $AGR list                       # unread
@@ -47,6 +49,11 @@ $AGR status active              # or blocked --sound, completed
 ```
 
 - Write every message body to a file under `.agrevloop/out/` first, then send it by path.
+- **The first send starts the Reviewer.** While the other pane is still a shell, `send` files the
+  request and then types `@BIN@/agrevloop-<with> reviewer` there, at the checkout root, so the
+  Reviewer starts with the request already in its inbox. It waits until the Reviewer registers.
+  If it reports that the Reviewer did not start, tell the human, `status blocked --sound`, and do
+  not arm the waiter.
 - **Never pass `--nudge`.** `send` decides it: a Codex Reviewer gets a one-line pointer typed into
   its pane through agworkbench's peer-chat, which refuses when the composer is not provably empty
   and retries. A Claude Reviewer is woken by its own waiter. If the send reports that the message
@@ -93,7 +100,7 @@ Silence on a finding is not an answer.
 ## Phase 0 - orient
 
 ```bash
-$AGR init --tool claude
+$AGR init --tool claude --with <with>
 $AGR doctor
 $AGR status active
 openspec status --change <id>      # when the change exists
@@ -102,9 +109,12 @@ openspec status --change <id>      # when the change exists
 `init` ignores `.agrevloop/` and `review-runs/` through `.git/info/exclude`, the checkout's local
 ignore file. Never add them to the project's `.gitignore`, and never stage or commit them.
 
-`init` fails without a split: say so and stop. You never start the Reviewer and never open a pane.
-If `init` or `doctor` shows no `reviewer` box, tell the human to start one in the other pane with
-`agrevloop-codex reviewer` or `agrevloop-claude reviewer`, and wait.
+`init` splits this session left/right when it is not split yet, and remembers `with`. A Reviewer
+already running in the other pane is kept; one of the other tool is refused. When the other pane
+is neither a shell prompt nor the Reviewer, `init` fails: show its message to the human and stop.
+The Reviewer itself starts with your first request (see The channel), so `doctor` showing no
+`reviewer` box before that is expected. You never split, start or type into a pane yourself:
+`$AGR` does it.
 
 ## Phase 1 - proposal and spec deltas
 

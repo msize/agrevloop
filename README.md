@@ -32,17 +32,33 @@ transport is agworkbench's vendored, fail-closed tooling: `agmsg` (a file mailbo
 ```bash
 CODEX_REVIEW_SKILL='$<plugin>:<review-skill>' \
 CLAUDE_REVIEW_SKILL='/<plugin>:<review-skill>' ./install.sh   # how each harness invokes its review skill
-export PATH="<path-to-agrevloop>/bin:$PATH"                   # for agrevloop-claude and agrevloop-codex
+export PATH="<path-to-agrevloop>/bin:$PATH"                   # optional: the skills carry the full path
 ```
 
 ## Use
 
-1. In the project checkout, open an agwinterm split.
-2. Right pane, the Reviewer: `agrevloop-codex reviewer` or `agrevloop-claude reviewer`. It waits
-   for mail.
-3. Left pane, the Author: `agrevloop-claude author add-retry-policy gates=p1` or
-   `agrevloop-codex author add-retry-policy gates=p1`, or describe the change instead of naming it.
-   Arguments after `--` go to `claude` or `codex` unchanged.
+In the project checkout, inside agwinterm, start the Author and name its Reviewer with `with=`:
+
+```bash
+agrevloop-claude author add-retry-policy gates=p1 with=codex   # with=codex is the default
+agrevloop-claude author add-retry-policy with=claude
+agrevloop-codex author add-retry-policy                        # the Reviewer is always Claude
+```
+
+Describe the change instead of naming it, or pass nothing and pick from the active changes.
+Arguments after `--` go to `claude` or `codex` unchanged. A Claude Author can also be started as
+plain `claude` with `/agrevloop-author ... with=codex`: the skill runs `init` itself.
+
+The Author's `init` splits its session left/right when it is not split yet. The Reviewer starts in
+the right pane, at the checkout root, through `agrevloop-<with> reviewer`:
+
+- Claude Author: with its first request, after the request is filed, so the Reviewer starts
+  working on it at once;
+- Codex Author: right away, by the launcher, since from inside its sandbox it could not later.
+
+A Reviewer already running in the right pane is kept. A right pane that is neither a shell prompt
+nor the Reviewer is never typed into: `init` stops and says what to start there. The Reviewer can
+still be started by hand with `agrevloop-codex reviewer` or `agrevloop-claude reviewer`.
 
 | Author | Reviewer | |
 |---|---|---|
@@ -50,9 +66,6 @@ export PATH="<path-to-agrevloop>/bin:$PATH"                   # for agrevloop-cl
 | Codex | Claude | yes |
 | Claude | Claude | yes |
 | Codex | Codex | no: nobody could wake the other |
-
-A Claude Author can also be started as plain `claude` with `/agrevloop-author ...`, a Claude
-Reviewer with `/agrevloop-reviewer`: the skill runs `init` itself.
 
 Each launcher runs `agr.py --as <role> init --tool <tool>`, which creates `.agrevloop/`, adds it
 and `review-runs/` to `.git/info/exclude`, and registers its own pane under its role. From there

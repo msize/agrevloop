@@ -1,13 +1,15 @@
 #!/usr/bin/env bash
 # Start Codex in this pane as the agrevloop author or reviewer:
 #
-#   agrevloop-codex author [<change-id or description> [gates=...] | review [<name>]] [-- codex args]
+#   agrevloop-codex author [<change-id or description> [gates=...] | review [<name>]] [with=claude] [-- codex args]
 #   agrevloop-codex reviewer [-- codex args]
 #
 # Registers this pane in the mailbox first (the sandbox cannot reach agwinterm, so Codex could not
-# do it itself), then runs Codex in a workspace-write sandbox rooted at the checkout, without
-# network or approval prompts, and with the mailbox copied into its tool environment (Codex strips
-# the environment from tool subprocesses). Arguments after `--` go to codex unchanged.
+# do it itself). The author also gets a left/right split with the Claude reviewer started in the
+# other pane right away: from inside the sandbox it could not be started later. Then it runs
+# Codex in a workspace-write sandbox rooted at the checkout, without network or approval prompts,
+# and with the mailbox copied into its tool environment (Codex strips the environment from tool
+# subprocesses). Arguments after `--` go to codex unchanged.
 # The configurable status line is turned off: it draws a second footer row under the composer,
 # and peer-chat, which strips exactly one, then refuses every ring as "no Codex composer visible".
 set -euo pipefail
@@ -28,8 +30,16 @@ hub="$root/.agrevloop"
 
 [ -f "$workbench/lib/agmsg.py" ] || { echo "agrevloop-codex: agworkbench not found at $workbench" >&2; exit 2; }
 
+partner=()
+if [ "$role" = author ]; then
+  partner=(--with claude)
+  for arg in "${skill_args[@]}"; do
+    case "$arg" in with=claude) ;; with=*) echo "agrevloop-codex: a Codex author needs a Claude reviewer (with=claude)" >&2; exit 2 ;; esac
+  done
+fi
+
 cd "$root"
-python "$here/agr.py" --as "$role" init --tool codex
+python "$here/agr.py" --as "$role" init --tool codex "${partner[@]}"
 
 if [ "$role" = author ]; then
   prompt="You are the agrevloop AUTHOR. Load the agrevloop-author skill and run it with the arguments: ${skill_args[*]:-(none)}"

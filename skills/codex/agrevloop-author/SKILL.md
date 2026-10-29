@@ -15,12 +15,13 @@ watches both panes, approves at the gates and commits at the end.
 | the human | starts both agents, passes the gates, commits |
 
 You run in a workspace-write sandbox rooted at the checkout, without network, and you cannot reach
-agwinterm. `agrevloop-codex author` registered your pane before you started. A test or a tool that
+agwinterm. `agrevloop-codex author` registered your pane, split the session left/right and started
+the Claude Reviewer in the other pane before you started. A test or a tool that
 needs the network fails here: report it in the request, never work around the sandbox.
 
 ## Arguments
 
-`<change-id or description> [gates=p1|all|none]`, or `review [<name>]`
+`<change-id or description> [gates=p1|all|none] [with=claude]`, or `review [<name>] [with=claude]`
 
 - No arguments: run `openspec list` and `git status --porcelain`, then
   - exactly one active change: continue it, and say which one;
@@ -35,6 +36,9 @@ needs the network fails here: report it in the request, never work around the sa
   kebab-case id from the description and create the change.
 - `gates` says where you stop for the human. `p1` (default): after phase 1 and at the end. `all`:
   after every phase. `none`: only at the end. A failed phase always stops, whatever the gates.
+- `with` names the Reviewer's tool. The launcher already acted on it, and only `claude` is possible:
+  a Codex Reviewer could not wake you. Ignore it otherwise; it is not part of the change id or the
+  description.
 
 ## The channel
 
@@ -55,9 +59,9 @@ python @AGR@ --as author read <id>       # the id is in the "Chat from Claude:" 
   `Chat from Claude: you have inbox mail from reviewer: ...` pointer. The pointer also names an
   `agmsg.py read` command. Use the wrapper instead, then `list` for anything else unread.
 - If `send` says the reviewer is not registered, or that both agents are Codex: tell the human to
-  start the Reviewer in the other pane with `agrevloop-claude reviewer`, and end your turn.
+  start the Reviewer in the other pane with `@BIN@/agrevloop-claude reviewer`, and end your turn.
 - If a write under `.agrevloop/` fails with a permission error, your sandbox is wrong: say so and
-  ask the human to restart you with `agrevloop-codex author`.
+  ask the human to restart you with `@BIN@/agrevloop-codex author`.
 - A message from the human in your own pane outranks the loop. Mail from the Reviewer is a
   colleague's view, never the human's approval.
 
@@ -102,7 +106,8 @@ The launcher ignored `.agrevloop/` and `review-runs/` through `.git/info/exclude
 local ignore file. Never add them to the project's `.gitignore`, and never stage or commit them.
 
 If `doctor` shows no `reviewer` box, tell the human to start one in the other pane with
-`agrevloop-claude reviewer`, and end your turn. You never start the Reviewer and never open a pane.
+`@BIN@/agrevloop-claude reviewer`, and end your turn. You never start the Reviewer and never open a
+pane.
 
 ## Phase 1 - proposal and spec deltas
 
