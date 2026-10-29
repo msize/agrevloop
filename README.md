@@ -46,8 +46,27 @@ agrevloop-codex author add-retry-policy                        # the Reviewer is
 ```
 
 Describe the change instead of naming it, or pass nothing and pick from the active changes.
-Arguments after `--` go to `claude` or `codex` unchanged. A Claude Author can also be started as
-plain `claude` with `/agrevloop-author ... with=codex`: the skill runs `init` itself.
+`review [<name>]` instead of a change sends the uncommitted changes that already exist to review
+as one step. Arguments after `--` go to `claude` or `codex` unchanged.
+
+### From a running session
+
+In a Claude Code session that runs in an agwinterm pane, call the skills directly. They run
+`init` themselves, so the result is the same as with the launcher:
+
+```
+/agrevloop-author                                         # Codex reviews, pick from the active changes
+/agrevloop-author with=claude                             # Claude reviews
+/agrevloop-author add-retry-policy gates=all with=claude  # name the change, stop after every phase
+/agrevloop-author review with=codex                       # review the existing uncommitted changes
+/agrevloop-reviewer                                       # this session reviews for an Author started next to it
+```
+
+Codex needs its launcher in either role. It registers the pane, which the sandbox cannot do
+from inside, turns off the status line that would block every ring, and sets up the sandbox and
+the mailbox environment. `$agrevloop-author` typed into a plain `codex` session does not work.
+
+### What happens
 
 The Author's `init` splits its session left/right when it is not split yet. The Reviewer starts in
 the right pane, at the checkout root, through `agrevloop-<with> reviewer`:
